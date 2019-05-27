@@ -5,43 +5,61 @@ using UnityEngine.UI;
 
 public class Avion : MonoBehaviour
 {
-  [SerializeField] Slider barradeVida;
-  [SerializeField] Text Ganador;
-  [SerializeField]AudioSource explosionAudio, impactoBalaAudio;
-  float vida;
-  
+  [SerializeField] int vidaInicial;
+  [SerializeField] AudioClip avionExplosion;
+    public int contador;
+  public Slider vidaSlider;
+
+  ControlAudio controlAudio;
+  ControlTexto controlTexto;
+    Motor motor;
+  Disparar disparar;
+  Misil misil;
+
+
   void Start()
   {
-    explosionAudio = GetComponent<AudioSource>();
-    impactoBalaAudio = GetComponent<AudioSource>();
-    vida = 100;
+    motor = GetComponent<Motor>();
+    disparar = GetComponent<Disparar>();
+    controlTexto = GameObject.Find("ControlTexto").GetComponent<ControlTexto>();
+    controlAudio = GameObject.Find("ControlAudio").GetComponent<ControlAudio>();
+    vidaSlider.value = vidaInicial;
+        contador = 0;
   }
 
   void Update()
   {
-    barradeVida.value = vida;
+    motor.Girar();
+    motor.Acelerar();
+    motor.Sonido();
+    disparar.Disparo();
+
+    controlTexto.CambiarTextoMunicion(gameObject, disparar.currentBalas);
+    controlTexto.CambiarTextoMisiles(gameObject, disparar.currentMisiles);
+        Ganador();
+        Debug.Log(contador);
+  }
+
+  public void Dañar (int daño)
+  {
+  	vidaSlider.value -= daño;
+    if (vidaSlider.value <= 0) 
+    {
+      controlAudio.SonidoAvionExplosion(avionExplosion);
+      controlTexto.JugadorGanador(gameObject);  
+      Destruir();
+    }
   }
   
-  void OnCollisionEnter(Collision informacion)
+  void Destruir ()
   {
-    if (informacion.gameObject.CompareTag("Bala"))
-    {
-      vida -= 1;
-      barradeVida.value = vida;
-      impactoBalaAudio.Play();
-      if (!impactoBalaAudio.isPlaying) impactoBalaAudio.Play();
-      if (vida <= 0)
-      {
-        explosionAudio.Play();
-        Destroy(gameObject);
-        Ganador.text = "Eres el perdedor".ToString();
-
-      }
-    }
-        if (informacion.gameObject.CompareTag("RecuperarVida"))
-        {
-            vida += 10;
-            barradeVida.value = vida;
-        }
+  	Destroy(gameObject);
   }
+   void Ganador()
+    {
+        if (contador >= 4)
+        {
+            controlTexto.JugadorGanadorAros(gameObject);
+        }
+    }
 }
